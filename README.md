@@ -26,7 +26,7 @@ func main() {
 
     resp, err := llm.Call(ctx, "Hello, world!",
         llm.WithProvider("anthropic"),
-        llm.WithModel("claude-3-5-haiku-latest"),
+        llm.WithModel("claude-sonnet-4-5-20250929"),
     )
     if err != nil {
         panic(err)
@@ -44,7 +44,7 @@ func main() {
 // Simple call
 resp, _ := llm.Call(ctx, "What is Go?",
     llm.WithProvider("openai"),
-    llm.WithModel("gpt-4o"),
+    llm.WithModel("o4-mini"),
 )
 fmt.Println(resp.Text())
 
@@ -125,7 +125,7 @@ import "github.com/i2y/bucephalus/tools"
 // Use all built-in tools
 resp, _ := llm.Call(ctx, "Find all Go files with 'TODO' comments",
     llm.WithProvider("anthropic"),
-    llm.WithModel("claude-3-5-haiku-latest"),
+    llm.WithModel("claude-sonnet-4-5-20250929"),
     llm.WithTools(tools.AllTools()...),
 )
 
@@ -164,6 +164,28 @@ resp, _ := llm.Call(ctx, "What is Go programming language?",
 | `ReadOnlyTools()` | Read, Glob, Grep, WebFetch, WebSearch, Wikipedia |
 | `SystemTools()` | Write, Bash |
 
+### MCP Integration
+
+Integrate with [Model Context Protocol](https://modelcontextprotocol.io/) servers using the official Go SDK.
+
+```go
+import "github.com/i2y/bucephalus/mcp"
+
+// Get tools from an MCP server
+tools, cleanup, err := mcp.ToolsFromMCP(ctx, "./my-mcp-server", nil)
+if err != nil {
+    return err
+}
+defer cleanup()
+
+// Use MCP tools with LLM
+resp, _ := llm.Call(ctx, "List files in current directory",
+    llm.WithProvider("openai"),
+    llm.WithModel("o4-mini"),
+    llm.WithTools(tools...),
+)
+```
+
 ### Plugin Support (Claude Code-style)
 
 Load plugins using a directory structure similar to Claude Code.
@@ -189,7 +211,7 @@ resp, _ := llm.Call(ctx, "Review this code", skill.ToOption())
 agent := p.GetAgent("helper")
 runner := agent.NewRunner(
     plugin.WithAgentProvider("anthropic"),
-    plugin.WithAgentModel("claude-3-5-haiku-latest"),
+    plugin.WithAgentModel("claude-sonnet-4-5-20250929"),
     plugin.WithAgentTools(tools...),  // Filtered by agent.Tools
     // Pass additional llm.Options for all Run() calls
     plugin.WithAgentLLMOptions(
@@ -272,7 +294,7 @@ openai/       # OpenAI implementation
 anthropic/    # Anthropic implementation
 gemini/       # Google Gemini implementation
 schema/       # JSON schema generation
-mcp/          # Model Context Protocol integration
+mcp/          # Model Context Protocol integration (official Go SDK)
 plugin/       # Claude Code Plugin loader
 tools/        # Built-in tools (Read, Write, Glob, Grep, Bash, Web)
 ```

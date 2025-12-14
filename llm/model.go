@@ -13,7 +13,7 @@ import (
 //
 // Example:
 //
-//	model := llm.NewModel("openai", "gpt-4o-mini",
+//	model := llm.NewModel("openai", "o4-mini",
 //	    llm.WithTemperature(0.7),
 //	)
 //

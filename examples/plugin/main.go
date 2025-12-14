@@ -122,7 +122,7 @@ func demoCommandWithLLM(ctx context.Context, p *plugin.Plugin) {
 
 	resp, err := llm.Call(ctx, "Hello!",
 		llm.WithProvider("anthropic"),
-		llm.WithModel("claude-3-5-haiku-latest"),
+		llm.WithModel("claude-sonnet-4-5-20250929"),
 		greetCmd.ToOption(), // Use command as system message
 		llm.WithMaxTokens(200),
 	)
@@ -154,7 +154,7 @@ func demoCommandWithArgs(ctx context.Context, p *plugin.Plugin) {
 
 	resp, err := llm.Call(ctx, userMsg,
 		llm.WithProvider("anthropic"),
-		llm.WithModel("claude-3-5-haiku-latest"),
+		llm.WithModel("claude-sonnet-4-5-20250929"),
 		expanded.ToOption(),
 		llm.WithMaxTokens(100),
 	)
@@ -183,7 +183,7 @@ func demoProcessInput(ctx context.Context, p *plugin.Plugin) {
 
 		opts := []llm.Option{
 			llm.WithProvider("anthropic"),
-			llm.WithModel("claude-3-5-haiku-latest"),
+			llm.WithModel("claude-sonnet-4-5-20250929"),
 			llm.WithMaxTokens(150),
 		}
 		if opt != nil {
@@ -216,7 +216,7 @@ func demoSkill(ctx context.Context, p *plugin.Plugin) {
 
 	resp, err := llm.Call(ctx, "Review this Go function:\n"+code,
 		llm.WithProvider("anthropic"),
-		llm.WithModel("claude-3-5-haiku-latest"),
+		llm.WithModel("claude-sonnet-4-5-20250929"),
 		skill.ToOption(), // Use skill's system message
 		llm.WithMaxTokens(300),
 	)
@@ -240,7 +240,7 @@ func demoAgentRunner(ctx context.Context, p *plugin.Plugin) {
 	// Create a runner for the agent
 	runner := agent.NewRunner(
 		plugin.WithAgentProvider("anthropic"),
-		plugin.WithAgentModel("claude-3-5-haiku-latest"),
+		plugin.WithAgentModel("claude-sonnet-4-5-20250929"),
 		plugin.WithAgentMaxTokens(200),
 	)
 
@@ -270,7 +270,7 @@ func demoAgentContext(ctx context.Context, p *plugin.Plugin) {
 	// WithAgentLLMOptions allows passing any llm.Option
 	runner := agent.NewRunner(
 		plugin.WithAgentProvider("anthropic"),
-		plugin.WithAgentModel("claude-3-5-haiku-latest"),
+		plugin.WithAgentModel("claude-sonnet-4-5-20250929"),
 		plugin.WithAgentMaxTokens(150),
 		// NEW: Pass additional llm.Options at runner creation
 		plugin.WithAgentLLMOptions(

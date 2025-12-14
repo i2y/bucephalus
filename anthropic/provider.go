@@ -189,12 +189,8 @@ func (p *Provider) buildRequest(req *provider.Request) *messagesRequest {
 	// Handle JSON Schema for structured output
 	if req.JSONSchema != nil {
 		apiReq.OutputFormat = &outputFormat{
-			Type: "json_schema",
-			JSONSchema: &jsonSchemaFormat{
-				Name:   req.JSONSchema.Name,
-				Strict: req.JSONSchema.Strict,
-				Schema: req.JSONSchema.Schema,
-			},
+			Type:   "json_schema",
+			Schema: req.JSONSchema.Schema,
 		}
 	}
 

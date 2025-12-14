@@ -6,21 +6,21 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"os/exec"
 	"strings"
 	"time"
 
 	"github.com/invopop/jsonschema"
-	"github.com/mark3labs/mcp-go/client"
-	"github.com/mark3labs/mcp-go/mcp"
+	"github.com/modelcontextprotocol/go-sdk/mcp"
 
 	"github.com/i2y/bucephalus/llm"
 )
 
 // Client wraps an MCP client for use with Bucephalus.
 type Client struct {
-	mcpClient   *client.Client
-	timeout     time.Duration
-	initialized bool
+	mcpClient *mcp.Client
+	session   *mcp.ClientSession
+	timeout   time.Duration
 }
 
 // Option configures the MCP client.
@@ -41,14 +41,14 @@ func WithTimeout(d time.Duration) Option {
 //
 // Example:
 //
-//	client, err := mcp.NewStdioClient("./my-mcp-server")
+//	client, err := mcp.NewStdioClient(ctx, "./my-mcp-server", nil)
 //	if err != nil {
 //	    return err
 //	}
 //	defer client.Close()
 //
 //	tools, err := client.Tools(ctx)
-func NewStdioClient(command string, args []string, opts ...Option) (*Client, error) {
+func NewStdioClient(ctx context.Context, command string, args []string, opts ...Option) (*Client, error) {
 	cfg := &clientConfig{
 		timeout: 30 * time.Second,
 	}
@@ -56,38 +56,29 @@ func NewStdioClient(command string, args []string, opts ...Option) (*Client, err
 		opt(cfg)
 	}
 
-	mcpClient, err := client.NewStdioMCPClient(command, nil, args...)
+	// Create the MCP client
+	mcpClient := mcp.NewClient(&mcp.Implementation{
+		Name:    "bucephalus",
+		Version: "0.1.0",
+	}, nil)
+
+	// Create command transport
+	cmd := exec.Command(command, args...)
+	transport := &mcp.CommandTransport{
+		Command: cmd,
+	}
+
+	// Connect to the server
+	session, err := mcpClient.Connect(ctx, transport, nil)
 	if err != nil {
-		return nil, fmt.Errorf("creating MCP client: %w", err)
+		return nil, fmt.Errorf("connecting to MCP server: %w", err)
 	}
 
 	return &Client{
 		mcpClient: mcpClient,
+		session:   session,
 		timeout:   cfg.timeout,
 	}, nil
-}
-
-// Initialize initializes the MCP connection.
-// This is called automatically by Tools() if not already initialized.
-func (c *Client) Initialize(ctx context.Context) error {
-	if c.initialized {
-		return nil
-	}
-
-	initRequest := mcp.InitializeRequest{}
-	initRequest.Params.ProtocolVersion = mcp.LATEST_PROTOCOL_VERSION
-	initRequest.Params.ClientInfo = mcp.Implementation{
-		Name:    "bucephalus",
-		Version: "0.1.0",
-	}
-
-	_, err := c.mcpClient.Initialize(ctx, initRequest)
-	if err != nil {
-		return fmt.Errorf("initializing MCP: %w", err)
-	}
-
-	c.initialized = true
-	return nil
 }
 
 // Tools returns all tools from the MCP server as Bucephalus Tools.
@@ -101,16 +92,11 @@ func (c *Client) Initialize(ctx context.Context) error {
 //
 //	resp, err := llm.Call(ctx, "Use the tools to help",
 //	    llm.WithProvider("openai"),
-//	    llm.WithModel("gpt-4o"),
+//	    llm.WithModel("o4-mini"),
 //	    llm.WithTools(tools...),
 //	)
 func (c *Client) Tools(ctx context.Context) ([]llm.Tool, error) {
-	if err := c.Initialize(ctx); err != nil {
-		return nil, err
-	}
-
-	listReq := mcp.ListToolsRequest{}
-	result, err := c.mcpClient.ListTools(ctx, listReq)
+	result, err := c.session.ListTools(ctx, &mcp.ListToolsParams{})
 	if err != nil {
 		return nil, fmt.Errorf("listing MCP tools: %w", err)
 	}
@@ -128,13 +114,13 @@ func (c *Client) Tools(ctx context.Context) ([]llm.Tool, error) {
 
 // Close closes the MCP client connection.
 func (c *Client) Close() error {
-	return c.mcpClient.Close()
+	return c.session.Close()
 }
 
 // mcpToolWrapper wraps an MCP tool to implement llm.Tool.
 type mcpToolWrapper struct {
 	client  *Client
-	mcpTool mcp.Tool
+	mcpTool *mcp.Tool
 }
 
 func (t *mcpToolWrapper) Name() string {
@@ -172,11 +158,10 @@ func (t *mcpToolWrapper) Execute(ctx context.Context, args json.RawMessage) (any
 	}
 
 	// Call the MCP tool
-	callReq := mcp.CallToolRequest{}
-	callReq.Params.Name = t.mcpTool.Name
-	callReq.Params.Arguments = arguments
-
-	result, err := t.client.mcpClient.CallTool(ctx, callReq)
+	result, err := t.client.session.CallTool(ctx, &mcp.CallToolParams{
+		Name:      t.mcpTool.Name,
+		Arguments: arguments,
+	})
 	if err != nil {
 		return nil, fmt.Errorf("calling MCP tool: %w", err)
 	}
@@ -197,19 +182,16 @@ func processToolResult(content []mcp.Content) string {
 	var parts []string
 	for _, c := range content {
 		switch item := c.(type) {
-		case mcp.TextContent:
+		case *mcp.TextContent:
 			parts = append(parts, item.Text)
-		case mcp.ImageContent:
+		case *mcp.ImageContent:
 			// Return image info as text description
 			parts = append(parts, fmt.Sprintf("[Image: %s, %d bytes]", item.MIMEType, len(item.Data)))
-		case mcp.EmbeddedResource:
-			// Return resource info with URI from the underlying resource type
-			switch res := item.Resource.(type) {
-			case mcp.TextResourceContents:
-				parts = append(parts, fmt.Sprintf("[Resource: %s]", res.URI))
-			case mcp.BlobResourceContents:
-				parts = append(parts, fmt.Sprintf("[Resource: %s]", res.URI))
-			default:
+		case *mcp.EmbeddedResource:
+			// Return resource info with URI
+			if item.Resource != nil {
+				parts = append(parts, fmt.Sprintf("[Resource: %s]", item.Resource.URI))
+			} else {
 				parts = append(parts, "[Resource: embedded]")
 			}
 		}
@@ -229,7 +211,7 @@ func processToolResult(content []mcp.Content) string {
 //
 //	resp, err := llm.Call(ctx, "Help me", llm.WithTools(tools...))
 func ToolsFromMCP(ctx context.Context, command string, args []string, opts ...Option) ([]llm.Tool, func() error, error) {
-	mcpClient, err := NewStdioClient(command, args, opts...)
+	mcpClient, err := NewStdioClient(ctx, command, args, opts...)
 	if err != nil {
 		return nil, nil, err
 	}

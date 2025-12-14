@@ -19,15 +19,8 @@ type messagesRequest struct {
 
 // outputFormat specifies the output format for structured output.
 type outputFormat struct {
-	Type       string            `json:"type"` // "json_schema"
-	JSONSchema *jsonSchemaFormat `json:"json_schema,omitempty"`
-}
-
-// jsonSchemaFormat specifies JSON schema for structured output.
-type jsonSchemaFormat struct {
-	Name   string          `json:"name"`
-	Strict bool            `json:"strict"`
-	Schema json.RawMessage `json:"schema"`
+	Type   string          `json:"type"`   // "json_schema"
+	Schema json.RawMessage `json:"schema"` // The JSON schema
 }
 
 // message represents a message in the conversation.

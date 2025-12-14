@@ -26,7 +26,7 @@ func main() {
 	// and parses the response into a Book struct
 	resp, err := llm.CallParse[Book](ctx, "Recommend a classic science fiction book",
 		llm.WithProvider("openai"),
-		llm.WithModel("gpt-4o-mini"),
+		llm.WithModel("o4-mini"),
 	)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %v\n", err)

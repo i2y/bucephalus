@@ -3,6 +3,7 @@ package openai
 
 import (
 	"context"
+	"encoding/json"
 	"net/http"
 	"os"
 
@@ -166,7 +167,7 @@ func (p *Provider) buildRequest(req *provider.Request) *chatCompletionRequest {
 			JSONSchema: &jsonSchemaFormat{
 				Name:   req.JSONSchema.Name,
 				Strict: req.JSONSchema.Strict,
-				Schema: req.JSONSchema.Schema,
+				Schema: makeAllPropertiesRequired(req.JSONSchema.Schema),
 			},
 		}
 	}
@@ -201,6 +202,55 @@ func (p *Provider) convertResponse(resp *chatCompletionResponse) *provider.Respo
 	}
 
 	return result
+}
+
+// makeAllPropertiesRequired ensures all properties in the schema are required.
+// OpenAI's structured output API requires all properties to be in the 'required' array.
+func makeAllPropertiesRequired(schema json.RawMessage) json.RawMessage {
+	if schema == nil {
+		return nil
+	}
+
+	var schemaMap map[string]any
+	if err := json.Unmarshal(schema, &schemaMap); err != nil {
+		return schema
+	}
+
+	makeRequiredRecursive(schemaMap)
+
+	result, err := json.Marshal(schemaMap)
+	if err != nil {
+		return schema
+	}
+	return result
+}
+
+// makeRequiredRecursive recursively makes all properties required in the schema.
+func makeRequiredRecursive(schemaMap map[string]any) {
+	// Get all property names and make them required
+	if props, ok := schemaMap["properties"].(map[string]any); ok {
+		required := make([]string, 0, len(props))
+		for key := range props {
+			required = append(required, key)
+		}
+		schemaMap["required"] = required
+
+		// Recursively process nested objects
+		for _, val := range props {
+			if propMap, ok := val.(map[string]any); ok {
+				// Handle nested object types
+				if propMap["type"] == "object" {
+					makeRequiredRecursive(propMap)
+				}
+				// Handle array items
+				if items, ok := propMap["items"].(map[string]any); ok {
+					if items["type"] == "object" {
+						makeRequiredRecursive(items)
+					}
+				}
+			}
+		}
+	}
 }
 
 // convertFinishReason converts an OpenAI finish reason to a provider.FinishReason.

@@ -19,7 +19,7 @@ func main() {
 
 	resp1, err := llm.Call(ctx, "Recommend a fantasy book",
 		llm.WithProvider("anthropic"),
-		llm.WithModel("claude-3-5-haiku-latest"),
+		llm.WithModel("claude-sonnet-4-5-20250929"),
 		llm.WithMaxTokens(256),
 		llm.WithSystemMessage("You are a helpful librarian. Keep your responses concise."),
 	)

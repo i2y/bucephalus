@@ -42,7 +42,7 @@ func WithProvider(name string) Option {
 	}
 }
 
-// WithModel sets the model to use (e.g., "gpt-4o-mini").
+// WithModel sets the model to use (e.g., "o4-mini").
 func WithModel(name string) Option {
 	return func(c *callConfig) {
 		c.model = name

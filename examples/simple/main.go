@@ -16,7 +16,7 @@ func main() {
 	// Simple call with direct options
 	resp, err := llm.Call(ctx, "Recommend a fantasy book in one sentence",
 		llm.WithProvider("openai"),
-		llm.WithModel("gpt-4o-mini"),
+		llm.WithModel("o4-mini"),
 	)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
@@ -33,7 +33,7 @@ func main() {
 
 	// Using a reusable Model instance
 	fmt.Println("\n--- Using Model instance ---")
-	model := llm.NewModel("openai", "gpt-4o-mini",
+	model := llm.NewModel("openai", "o4-mini",
 		llm.WithTemperature(0.7),
 	)
 

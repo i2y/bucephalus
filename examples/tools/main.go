@@ -85,7 +85,7 @@ func main() {
 	fmt.Println("Asking about weather...")
 	resp, err := llm.Call(ctx, "What's the weather like in Tokyo, Japan?",
 		llm.WithProvider("openai"),
-		llm.WithModel("gpt-4o-mini"),
+		llm.WithModel("o4-mini"),
 		llm.WithTools(weatherTool, calculatorTool),
 	)
 	if err != nil {
@@ -117,7 +117,7 @@ func main() {
 
 		resp2, err := llm.CallMessages(ctx, messages,
 			llm.WithProvider("openai"),
-			llm.WithModel("gpt-4o-mini"),
+			llm.WithModel("o4-mini"),
 			llm.WithTools(weatherTool, calculatorTool),
 		)
 		if err != nil {

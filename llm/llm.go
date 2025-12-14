@@ -17,7 +17,7 @@ import (
 //
 //	resp, err := llm.Call(ctx, "Recommend a fantasy book",
 //	    llm.WithProvider("openai"),
-//	    llm.WithModel("gpt-4o-mini"),
+//	    llm.WithModel("o4-mini"),
 //	)
 //	if err != nil {
 //	    return err
@@ -69,7 +69,7 @@ func Call(ctx context.Context, prompt string, opts ...Option) (Response[string],
 //
 //	resp, err := llm.CallParse[Book](ctx, "Recommend a sci-fi book",
 //	    llm.WithProvider("openai"),
-//	    llm.WithModel("gpt-4o"),
+//	    llm.WithModel("o4-mini"),
 //	)
 //	if err != nil {
 //	    return err
@@ -154,7 +154,7 @@ func CallParse[T any](ctx context.Context, prompt string, opts ...Option) (Respo
 //
 //	resp, err := llm.CallMessages(ctx, messages,
 //	    llm.WithProvider("openai"),
-//	    llm.WithModel("gpt-4o-mini"),
+//	    llm.WithModel("o4-mini"),
 //	)
 func CallMessages(ctx context.Context, messages []Message, opts ...Option) (Response[string], error) {
 	cfg := newCallConfig()

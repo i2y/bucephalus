@@ -142,10 +142,16 @@ func (p *Provider) buildRequest(req *provider.Request) *generateContentRequest {
 		if msg.Role == provider.RoleTool {
 			// In Gemini, function responses go in "user" role
 			// but with functionResponse part
+			// Gemini requires response to be an object (Struct), not a primitive
 			var responseData any
-			_ = json.Unmarshal([]byte(msg.Content), &responseData)
-			if responseData == nil {
-				responseData = msg.Content
+			if err := json.Unmarshal([]byte(msg.Content), &responseData); err != nil {
+				// If not valid JSON, wrap in object
+				responseData = map[string]any{"result": msg.Content}
+			} else {
+				// If it's not already an object, wrap it
+				if _, isMap := responseData.(map[string]any); !isMap {
+					responseData = map[string]any{"result": responseData}
+				}
 			}
 
 			apiContent.Role = "user"
@@ -194,10 +200,12 @@ func (p *Provider) buildRequest(req *provider.Request) *generateContentRequest {
 	if len(req.Tools) > 0 {
 		funcDecls := make([]functionDeclaration, 0, len(req.Tools))
 		for _, tool := range req.Tools {
+			// Clean up schema to remove fields not supported by Gemini
+			params := cleanSchemaForGemini(tool.Parameters)
 			funcDecls = append(funcDecls, functionDeclaration{
 				Name:        tool.Name,
 				Description: tool.Description,
-				Parameters:  tool.Parameters,
+				Parameters:  params,
 			})
 		}
 		apiReq.Tools = []tool{{FunctionDeclarations: funcDecls}}
@@ -209,9 +217,10 @@ func (p *Provider) buildRequest(req *provider.Request) *generateContentRequest {
 			apiReq.GenerationConfig = &generationConfig{}
 		}
 		apiReq.GenerationConfig.ResponseMimeType = "application/json"
+		// Clean schema to remove fields not supported by Gemini
+		cleaned := cleanSchemaForGemini(req.JSONSchema.Schema)
 		var schema any
-		// Schema is json.RawMessage (pre-validated JSON), so unmarshal should not fail
-		if err := json.Unmarshal(req.JSONSchema.Schema, &schema); err == nil {
+		if err := json.Unmarshal(cleaned, &schema); err == nil {
 			apiReq.GenerationConfig.ResponseSchema = schema
 		}
 	}
@@ -255,6 +264,38 @@ func (p *Provider) convertResponse(resp *generateContentResponse) *provider.Resp
 	}
 
 	return result
+}
+
+// cleanSchemaForGemini removes fields not supported by Gemini API from JSON schema.
+func cleanSchemaForGemini(schema json.RawMessage) json.RawMessage {
+	if schema == nil {
+		return nil
+	}
+
+	var schemaMap map[string]any
+	if err := json.Unmarshal(schema, &schemaMap); err != nil {
+		return schema
+	}
+
+	// Remove unsupported fields
+	delete(schemaMap, "$schema")
+	delete(schemaMap, "additionalProperties")
+
+	// Recursively clean nested properties
+	if props, ok := schemaMap["properties"].(map[string]any); ok {
+		for key, val := range props {
+			if propMap, ok := val.(map[string]any); ok {
+				delete(propMap, "additionalProperties")
+				props[key] = propMap
+			}
+		}
+	}
+
+	cleaned, err := json.Marshal(schemaMap)
+	if err != nil {
+		return schema
+	}
+	return cleaned
 }
 
 func convertRole(role provider.Role) string {

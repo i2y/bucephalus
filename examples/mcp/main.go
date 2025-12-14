@@ -56,7 +56,7 @@ func run() error {
 
 	resp, err := llm.Call(ctx, "List the files in the current directory",
 		llm.WithProvider("openai"),
-		llm.WithModel("gpt-4o-mini"),
+		llm.WithModel("o4-mini"),
 		llm.WithTools(tools...),
 	)
 	if err != nil {
@@ -104,7 +104,7 @@ func run() error {
 
 		resp2, err := llm.CallMessages(ctx, messages,
 			llm.WithProvider("openai"),
-			llm.WithModel("gpt-4o-mini"),
+			llm.WithModel("o4-mini"),
 		)
 		if err != nil {
 			return fmt.Errorf("continuing conversation: %w", err)

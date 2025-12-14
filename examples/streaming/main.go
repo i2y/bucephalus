@@ -25,7 +25,7 @@ func run() error {
 	// CallStream returns a Stream that you can iterate over
 	stream, err := llm.CallStream(ctx, "Write a short haiku about programming",
 		llm.WithProvider("openai"),
-		llm.WithModel("gpt-4o-mini"),
+		llm.WithModel("o4-mini"),
 	)
 	if err != nil {
 		return err

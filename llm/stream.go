@@ -88,7 +88,7 @@ type ToolCallDelta struct {
 //
 //	stream, err := llm.CallStream(ctx, "Write a short story",
 //	    llm.WithProvider("openai"),
-//	    llm.WithModel("gpt-4o-mini"),
+//	    llm.WithModel("o4-mini"),
 //	)
 //	if err != nil {
 //	    return err

@@ -3,7 +3,7 @@ package mcp
 import (
 	"testing"
 
-	"github.com/mark3labs/mcp-go/mcp"
+	"github.com/modelcontextprotocol/go-sdk/mcp"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -21,34 +21,34 @@ func TestProcessToolResult(t *testing.T) {
 		{
 			name: "single text content",
 			content: []mcp.Content{
-				mcp.TextContent{Text: "Hello, World!"},
+				&mcp.TextContent{Text: "Hello, World!"},
 			},
 			expected: "Hello, World!",
 		},
 		{
 			name: "multiple text contents joined with newline",
 			content: []mcp.Content{
-				mcp.TextContent{Text: "Line 1"},
-				mcp.TextContent{Text: "Line 2"},
-				mcp.TextContent{Text: "Line 3"},
+				&mcp.TextContent{Text: "Line 1"},
+				&mcp.TextContent{Text: "Line 2"},
+				&mcp.TextContent{Text: "Line 3"},
 			},
 			expected: "Line 1\nLine 2\nLine 3",
 		},
 		{
 			name: "image content",
 			content: []mcp.Content{
-				mcp.ImageContent{
+				&mcp.ImageContent{
 					MIMEType: "image/png",
-					Data:     "base64encodeddata", // 17 bytes
+					Data:     []byte("base64encodeddata"), // 17 bytes
 				},
 			},
 			expected: "[Image: image/png, 17 bytes]",
 		},
 		{
-			name: "embedded resource with text contents",
+			name: "embedded resource",
 			content: []mcp.Content{
-				mcp.EmbeddedResource{
-					Resource: mcp.TextResourceContents{
+				&mcp.EmbeddedResource{
+					Resource: &mcp.ResourceContents{
 						URI: "file:///path/to/resource.txt",
 					},
 				},
@@ -56,27 +56,25 @@ func TestProcessToolResult(t *testing.T) {
 			expected: "[Resource: file:///path/to/resource.txt]",
 		},
 		{
-			name: "embedded resource with blob contents",
+			name: "embedded resource with nil resource",
 			content: []mcp.Content{
-				mcp.EmbeddedResource{
-					Resource: mcp.BlobResourceContents{
-						URI: "file:///path/to/binary.dat",
-					},
+				&mcp.EmbeddedResource{
+					Resource: nil,
 				},
 			},
-			expected: "[Resource: file:///path/to/binary.dat]",
+			expected: "[Resource: embedded]",
 		},
 		{
 			name: "mixed content types",
 			content: []mcp.Content{
-				mcp.TextContent{Text: "Here is the data:"},
-				mcp.ImageContent{
+				&mcp.TextContent{Text: "Here is the data:"},
+				&mcp.ImageContent{
 					MIMEType: "image/jpeg",
-					Data:     "jpeg_data_here",
+					Data:     []byte("jpeg_data_here"),
 				},
-				mcp.TextContent{Text: "And a resource:"},
-				mcp.EmbeddedResource{
-					Resource: mcp.TextResourceContents{
+				&mcp.TextContent{Text: "And a resource:"},
+				&mcp.EmbeddedResource{
+					Resource: &mcp.ResourceContents{
 						URI: "file:///data.json",
 					},
 				},

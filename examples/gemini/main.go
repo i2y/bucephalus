@@ -19,7 +19,7 @@ func main() {
 	// Simple call
 	resp, err := llm.Call(ctx, "What is Go programming language? Answer in 2 sentences.",
 		llm.WithProvider("gemini"),
-		llm.WithModel("gemini-2.0-flash"),
+		llm.WithModel("gemini-2.5-flash"),
 		llm.WithMaxTokens(256),
 	)
 	if err != nil {
@@ -33,7 +33,7 @@ func main() {
 	// With system message
 	resp2, err := llm.Call(ctx, "Translate 'Hello, World!' to Japanese",
 		llm.WithProvider("gemini"),
-		llm.WithModel("gemini-2.0-flash"),
+		llm.WithModel("gemini-2.5-flash"),
 		llm.WithSystemMessage("You are a helpful translator. Respond with only the translation."),
 		llm.WithMaxTokens(100),
 	)
@@ -50,7 +50,7 @@ func main() {
 
 	resp3, err := llm.Call(ctx, "What is 2 + 2?",
 		llm.WithProvider("gemini"),
-		llm.WithModel("gemini-2.0-flash"),
+		llm.WithModel("gemini-2.5-flash"),
 		llm.WithMaxTokens(100),
 	)
 	if err != nil {

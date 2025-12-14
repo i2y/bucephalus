@@ -75,7 +75,7 @@ func WithAgentContext(ctx *AgentContext) AgentOption {
 //
 //	runner := agent.NewRunner(
 //	    plugin.WithAgentProvider("anthropic"),
-//	    plugin.WithAgentModel("claude-3-5-haiku-latest"),
+//	    plugin.WithAgentModel("claude-sonnet-4-5-20250929"),
 //	    plugin.WithAgentLLMOptions(
 //	        llm.WithTopP(0.9),
 //	        llm.WithSystemMessage(p.SkillsIndexSystemMessage()),
