@@ -69,6 +69,8 @@ recipe, _ := resp.Parsed()
 fmt.Println(recipe.Name)
 ```
 
+> **Note (Anthropic):** Structured output requires Claude Sonnet 4.5, Claude Opus 4.1/4.5, or Claude Haiku 4.5. Older models like Claude Sonnet 4 do not support the `output_format` feature.
+
 ### Streaming
 
 ```go
