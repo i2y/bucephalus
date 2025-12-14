@@ -1,0 +1,8 @@
+{
+  "name": "test-plugin",
+  "description": "A test plugin for Bucephalus plugin loader demonstration",
+  "version": "1.0.0",
+  "author": {
+    "name": "Bucephalus Team"
+  }
+}

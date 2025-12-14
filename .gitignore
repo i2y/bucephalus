@@ -1,0 +1,60 @@
+# Go binaries
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Go test binary
+*.test
+
+# Go coverage
+*.out
+coverage.html
+
+# Go vendor (if used)
+vendor/
+
+# Build output
+build/
+dist/
+tools-builtin
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Cache directories
+.cache/
+
+# Testing
+.coverage
+.coverage.*
+htmlcov/
+coverage.xml
+
+# Log files
+*.log
+
+# Temporary output files
+*_output.txt
+*_test_*.txt
+
+# Backup files
+*.bak
+*.backup
+
+# Debug scripts (root directory only)
+/debug_*.go
+/debug_*.py
+
+# Ad-hoc test scripts (root directory only)
+/test_*.sh
+
+# Environment files
+.env
+.env.local
