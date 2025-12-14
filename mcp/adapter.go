@@ -6,6 +6,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/invopop/jsonschema"
@@ -180,19 +181,40 @@ func (t *mcpToolWrapper) Execute(ctx context.Context, args json.RawMessage) (any
 		return nil, fmt.Errorf("calling MCP tool: %w", err)
 	}
 
-	// Extract text content from result
-	var content string
-	for _, c := range result.Content {
-		if textContent, ok := c.(mcp.TextContent); ok {
-			content += textContent.Text
-		}
-	}
+	combined := processToolResult(result.Content)
 
 	if result.IsError {
-		return nil, fmt.Errorf("MCP tool error: %s", content)
+		return nil, fmt.Errorf("MCP tool error: %s", combined)
 	}
 
-	return content, nil
+	return combined, nil
+}
+
+// processToolResult extracts text content from MCP tool result.
+// Multiple content items are joined with newlines.
+// Non-text content (images, resources) are represented as descriptive text.
+func processToolResult(content []mcp.Content) string {
+	var parts []string
+	for _, c := range content {
+		switch item := c.(type) {
+		case mcp.TextContent:
+			parts = append(parts, item.Text)
+		case mcp.ImageContent:
+			// Return image info as text description
+			parts = append(parts, fmt.Sprintf("[Image: %s, %d bytes]", item.MIMEType, len(item.Data)))
+		case mcp.EmbeddedResource:
+			// Return resource info with URI from the underlying resource type
+			switch res := item.Resource.(type) {
+			case mcp.TextResourceContents:
+				parts = append(parts, fmt.Sprintf("[Resource: %s]", res.URI))
+			case mcp.BlobResourceContents:
+				parts = append(parts, fmt.Sprintf("[Resource: %s]", res.URI))
+			default:
+				parts = append(parts, "[Resource: embedded]")
+			}
+		}
+	}
+	return strings.Join(parts, "\n")
 }
 
 // ToolsFromMCP is a convenience function to get tools from an MCP server.
